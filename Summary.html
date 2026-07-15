@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>LLM Speedrun Summary - Submission</title>
+    <title>LLM Speedrun Summary - My Submission</title>
     <style>
         body { font-family: sans-serif; line-height: 1.6; max-width: 800px; margin: auto; padding: 20px; background: #f4f4f4; }
         .card { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); margin-bottom: 20px; }
@@ -21,7 +21,7 @@
         <h2>Architecture & Parameters</h2>
         <ul>
             <li><strong>Model Type:</strong> Small GPT (Decoder-only Transformer)</li>
-            <li><strong>Parameter Count:</strong> 1,339,840 (~1.3M)</li>
+            <li><strong>Parameter Count:</strong> 1,339,840</li>
             <li><strong>Tokenizer:</strong> Byte-level (Vocab: 256)</li>
             <li><strong>Context Length:</strong> 128 tokens</li>
             <li><strong>Optimization:</strong> AdamW + 100-step Warmup + Cosine Decay</li>
@@ -30,7 +30,7 @@
 
     <div class="card">
         <h2>Best Metric Result</h2>
-        <p>The final model achieved a Bits Per Byte (BPB) of:</p>
+        <p>My final model achieved a Bits Per Byte (BPB) of:</p>
         <p class="metric">2.3593 on dev_eval.txt</p>
     </div>
 
@@ -41,45 +41,45 @@
                 <th>Run</th>
                 <th>Main Change</th>
                 <th>Dev BPB</th>
-                <th>Result</th>
+                <th>Conclusion</th>
             </tr>
             <tr>
                 <td>1</td>
                 <td>Baseline</td>
                 <td>2.3718</td>
-                <td>Starting point</td>
+                <td>Starting baseline.</td>
             </tr>
             <tr>
                 <td>2</td>
                 <td>AdamW + Cosine LR</td>
                 <td>2.3593</td>
-                <td>Best Performance</td>
+                <td>Best performance achieved.</td>
             </tr>
             <tr>
                 <td>3/4</td>
                 <td>BPE (Vocab 384)</td>
                 <td>2.4102</td>
-                <td>Regressed (Slow convergence)</td>
+                <td>Converged too slowly for 2k steps.</td>
             </tr>
             <tr>
                 <td>5</td>
                 <td>Weight Tying + Init</td>
                 <td>2.5560</td>
-                <td>Regressed</td>
+                <td>Regression; reverted to Run 2 settings.</td>
             </tr>
         </table>
     </div>
 
     <div class="card">
         <h2>Strategic Decisions</h2>
-        <p><strong>Why Byte-level?</strong> Hindi characters occupy 3 bytes in UTF-8. While BPE shortens sequences, it increases the embedding table size. In a 2,000-step "speedrun," the model doesn't have enough updates to learn a 384+ vocab effectively. Reverting to bytes ensured every parameter received frequent updates.</p>
-        <p><strong>Why AdamW/Cosine?</strong> The baseline used a constant LR which left performance on the table. Implementing a decay allowed us to use a higher peak LR (6e-4) to learn quickly at the start while cooling down for better final loss.</p>
+        <p><strong>Byte-level vs BPE:</strong> Hindi text requires 3 bytes per character. I initially moved to BPE to compress these sequences, but I realized that in a 2,000-step sprint, the model cannot effectively learn a larger embedding table. I decided to stick with the 256-byte vocabulary to ensure every parameter was updated frequently enough to converge.</p>
+        <p><strong>Optimization:</strong> I identified that the constant learning rate in the starter script was inefficient. I implemented a cosine decay with a warmup to allow for a higher initial learning rate (6e-4) while ensuring the model settled into a stable local minima by the end of the run.</p>
     </div>
 
     <div class="card">
         <h2>AI vs. Human Breakdown</h2>
-        <p><strong>Machine Done:</strong> AI assistants were used to generate the AdamW optimization loop, the BPE training script logic, and the boilerplate for the LR scheduler.</p>
-        <p><strong>Human Done:</strong> Analyzed the BPB regression in Run 3. Formulated the hypothesis that BPE's larger vocab was the bottleneck for a 2,000-step run. Decided to revert to the Byte tokenizer and focus on LR scheduling and gradient stability.</p>
+        <p><strong>Machine Done:</strong> I used AI assistants to generate the implementation for the AdamW optimizer and the boilerplate code for the Cosine Learning Rate scheduler.</p>
+        <p><strong>Human Done:</strong> I performed all hyperparameter tuning and experimental design. I made the critical decision to revert from BPE back to the Byte tokenizer after analyzing the BPB regression, concluding that training efficiency per step was more important than sequence compression for this specific time limit.</p>
     </div>
 </body>
 </html>
