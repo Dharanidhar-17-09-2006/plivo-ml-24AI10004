@@ -16,7 +16,7 @@ class Config:
     n_head = 4
     n_embd = 160
     dropout = 0.0
-    tie_weights = False   # <- one of many things worth questioning
+    tie_weights = False
 
 
 class SelfAttention(nn.Module):
@@ -69,7 +69,6 @@ class GPT(nn.Module):
         self.apply(self._init)
 
     def _init(self, m):
-        # baseline init: plain normal, one std for everything
         if isinstance(m, (nn.Linear, nn.Embedding)):
             nn.init.normal_(m.weight, mean=0.0, std=0.05)
             if isinstance(m, nn.Linear) and m.bias is not None:
