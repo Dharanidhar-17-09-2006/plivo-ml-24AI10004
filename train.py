@@ -34,7 +34,7 @@ def main():
     ap.add_argument("--data", required=True)
     ap.add_argument("--steps", type=int, default=2000)
     ap.add_argument("--batch", type=int, default=8)
-    ap.add_argument("--lr", type=float, default=3e-4)
+    ap.add_argument("--lr", type=float, default=6e-4)
     ap.add_argument("--seed", type=int, default=1337)
     ap.add_argument("--out", default="ckpt.pt")
     ap.add_argument("--log_every", type=int, default=100)
@@ -57,7 +57,14 @@ def main():
     assert n <= MAX_PARAMS, f"cap: max {MAX_PARAMS:,} params"
 
     # baseline choices, all questionable on purpose:
-    opt = torch.optim.Adam(model.parameters(), lr=args.lr)  # constant LR,
+    import math
+    opt = torch.optim.AdamW(model.parameters(), lr=args.lr, weight_decay=0.1, betas=(0.9, 0.95))
+    warmup_steps = 100
+    def lr_at(step):
+        if step < warmup_steps:
+            return args.lr * step / warmup_steps
+        progress = (step - warmup_steps) / max(1, args.steps - warmup_steps)
+        return 0.1 * args.lr + 0.9 * args.lr * 0.5 * (1 + math.cos(math.pi * progress))
     # no warmup, no schedule, no weight decay, no gradient clipping.
 
     model.train()
@@ -68,6 +75,9 @@ def main():
         _, loss = model(x, y)
         opt.zero_grad(set_to_none=True)
         loss.backward()
+        torch.nn.utils.clip_grad_norm_(model.parameters(), 1.0)
+        for g in opt.param_groups:
+            g['lr'] = lr_at(step)
         opt.step()
         losses.append(loss.item())
         if step % args.log_every == 0 or step == 1:
